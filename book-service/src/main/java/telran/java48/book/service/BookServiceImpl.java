@@ -99,37 +99,33 @@ final ModelMapper modelMapper;
 	@Override
 	@Transactional(readOnly = true)
 	public Iterable<String> findPublishersByAuthor(String authorName) {
-		return bookRepository.findByAuthorsName(authorName)
-				.map(b -> b.getPublisher().getPublisherName())
-				.collect(Collectors.toSet());
+//		return bookRepository.findByAuthorsName(authorName)
+//				.map(b -> b.getPublisher().getPublisherName())
+//				.collect(Collectors.toSet());
+		return publisherRepository.findPublishersByAuthor(authorName);
 	}
 
 	@Override
 	@Transactional
 	public AuthorDto removeAuthor(String authorName) {
 		Author author = authorRepository.findById(authorName).orElseThrow(EntityNotFoundException::new);
-		List<Book> books = bookRepository.findByAuthorsName(authorName).toList();
-		
-		for (Book book : books) {
-		    Set<Author> authors = book.getAuthors();
-//			   если автор в книге один, то вывести ошибку
+//		List<Book> books = bookRepository.findByAuthorsName(authorName).toList();
+//		
+//		for (Book book : books) {
+//		    Set<Author> authors = book.getAuthors();
+////			 
+//		    //если автор в книге один, то удалить книгу
 //		    if (authors.size() > 1) {
-//		    	authors.remove(author);
-//		    	book.setAuthors(authors);
-//		   		bookRepository.save(book);
+//			    authors.remove(author);
+//			    book.setAuthors(authors);
+//			    bookRepository.save(book);
 //		    } else {
-//		    	throw new Error("It's impossible to remove author");   
-//		    }
-		    
-		    //если автор в книге один, то удалить книгу
-		    if (authors.size() > 1) {
-			    authors.remove(author);
-			    book.setAuthors(authors);
-			    bookRepository.save(book);
-		    } else {
-		    	bookRepository.delete(book);
-			}
-		}	
+//		    	bookRepository.delete(book);
+//			}
+//		}
+		
+		//удалить все книги с этим автором
+		bookRepository.findByAuthorsName(authorName).forEach(b -> bookRepository.delete(b));
 		authorRepository.deleteById(authorName);
 		return modelMapper.map(author, AuthorDto.class);			
 	}
