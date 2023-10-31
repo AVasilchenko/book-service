@@ -3,6 +3,7 @@ package telran.java48.book.service;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -75,17 +76,25 @@ final ModelMapper modelMapper;
 	@Override
 	@Transactional(readOnly = true)
 	public Iterable<BookDto> findBooksByAuthor(String authorName) {
-		return bookRepository.findByAuthorsName(authorName)
+		Author author = authorRepository.findById(authorName).orElseThrow(EntityNotFoundException::new);
+		return author.getBooks().stream()
 				.map(b -> modelMapper.map(b, BookDto.class))
 				.collect(Collectors.toList());
+//		return bookRepository.findByAuthorsName(authorName)
+//				.map(b -> modelMapper.map(b, BookDto.class))
+//				.collect(Collectors.toList());
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public Iterable<BookDto> findBooksByPublisher(String publisherName) {
-		return bookRepository.findByPublisherPublisherName(publisherName)
+		Publisher publisher = publisherRepository.findById(publisherName).orElseThrow(EntityNotFoundException::new);
+		return publisher.getBooks().stream()
 				.map(b -> modelMapper.map(b, BookDto.class))
 				.collect(Collectors.toList());
+//		return bookRepository.findByPublisherPublisherName(publisherName)
+//				.map(b -> modelMapper.map(b, BookDto.class))
+//				.collect(Collectors.toList());
 	}
 
 	@Override
@@ -102,7 +111,12 @@ final ModelMapper modelMapper;
 //		return bookRepository.findByAuthorsName(authorName)
 //				.map(b -> b.getPublisher().getPublisherName())
 //				.collect(Collectors.toSet());
-		return publisherRepository.findPublishersByAuthor(authorName);
+
+//		return publisherRepository.findPublishersByAuthor(authorName);
+		
+		return publisherRepository.findDistinctByBooksAuthorsName(authorName)
+				.map(Publisher::getPublisherName)
+				.collect(Collectors.toList());
 	}
 
 	@Override
@@ -125,7 +139,7 @@ final ModelMapper modelMapper;
 //		}
 		
 		//удалить все книги с этим автором
-		bookRepository.findByAuthorsName(authorName).forEach(b -> bookRepository.delete(b));
+//		bookRepository.findByAuthorsName(authorName).forEach(b -> bookRepository.delete(b));
 		authorRepository.deleteById(authorName);
 		return modelMapper.map(author, AuthorDto.class);			
 	}
