@@ -1,9 +1,5 @@
 package telran.java48.book.service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -39,11 +35,11 @@ final ModelMapper modelMapper;
 		}
 		
 		Publisher publisher = publisherRepository.findById(bookDto.getPublisher())
-				.orElse(publisherRepository.save(new Publisher(bookDto.getPublisher())));
+				.orElseGet(() -> publisherRepository.save(new Publisher(bookDto.getPublisher())));
 		
 		Set<Author> authors = bookDto.getAuthors().stream()
 		        .map(a -> authorRepository.findById(a.getName())
-		                .orElse(authorRepository.save(new Author(a.getName(), a.getBirthDate()))))
+		                .orElseGet(() -> authorRepository.save(new Author(a.getName(), a.getBirthDate()))))
 		        .collect(Collectors.toSet());
 		
 		Book book = new Book(bookDto.getIsbn(), bookDto.getTitle(), authors, publisher);
@@ -71,7 +67,7 @@ final ModelMapper modelMapper;
 		Book book = bookRepository.findById(isbn).orElseThrow(EntityNotFoundException::new);
 		book.setTitle(title);
 		return modelMapper.map(book, BookDto.class);
-	}
+	}      
 
 	@Override
 	@Transactional(readOnly = true)
@@ -140,7 +136,7 @@ final ModelMapper modelMapper;
 		
 		//удалить все книги с этим автором
 //		bookRepository.findByAuthorsName(authorName).forEach(b -> bookRepository.delete(b));
-		authorRepository.deleteById(authorName);
+		authorRepository.delete(author);
 		return modelMapper.map(author, AuthorDto.class);			
 	}
 };
